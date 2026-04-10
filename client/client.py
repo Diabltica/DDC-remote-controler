@@ -49,9 +49,9 @@ def syncState(state, monitors):
 
     for i in range(len(actualSource)):
             state[i] = ((inputPerso[i] == actualSource[i])+1)%2
-            print("input perso: "+ inputPerso[i])
-            print("actual input: "+ actualSource[i])
-            print("state: "+ str(state[i]))
+            # print("input perso: "+ inputPerso[i])
+            # print("actual input: "+ actualSource[i])
+            # print("state: "+ str(state[i]))
     return state
 
 def sendStateToControler(state, ser):
@@ -73,6 +73,6 @@ if "__main__" == __name__:
         sendStateToControler(state, ser)
         line = ser.readline().decode("utf-8");
         if line != "\n" and line != "":
-            print(line)
+            # print(line)
             processCommand(monitors, int(line), state)
         
