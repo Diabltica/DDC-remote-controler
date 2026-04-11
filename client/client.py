@@ -1,7 +1,10 @@
 import sys
 import serial
+import serial.tools.list_ports
 from monitorcontrol import get_monitors, InputSource
 from monitorcontrol import vcp
+
+import gui
 
 def connectSerial(port, baudrate, timeout):
     try:
@@ -57,6 +60,28 @@ def syncState(state, monitors):
 def sendStateToControler(state, ser):
     ser.write(bytes((str(state[0])+str(state[1])+str(state[2])).encode()))
 
+def getMonitorData(monitors):
+    screenData = []
+
+    for m in monitors: 
+        with m:
+            # print(m.get_vcp_capabilities())
+            vcpCap = m.get_vcp_capabilities()
+            monInput = []
+            for i in vcpCap["inputs"]:
+                monInput.append(InputSource(i).name)
+            screenData.append([vcpCap["model"],monInput])
+    return screenData
+
+def getAvailableCom():
+    availableCom = []
+
+    ports = serial.tools.list_ports.comports()
+    for port, desc, hwid in sorted(ports):
+            availableCom.append(port)
+    
+    return availableCom
+
 if "__main__" == __name__:
     PORT = 'COM15'  # Change to your COM port
     BAUDRATE = 115200
@@ -68,6 +93,20 @@ if "__main__" == __name__:
     if ser == None:
         sys.exit(1)
     monitors = get_monitors()
+    monitorData = getMonitorData(monitors)
+
+    app = gui.ConfigGUI()
+
+    app.set_com_options(getAvailableCom())
+    app.set_screen_options([str(monitorData[0][0]), str(monitorData[1][0]), str(monitorData[2][0])])
+
+    app.set_input_options_for_screen_id(0, monitorData[0][1])
+    app.set_input_options_for_screen_id(1, monitorData[1][1])
+    app.set_input_options_for_screen_id(2, monitorData[2][1])
+
+    app.set_default_colors("#00ff00", "#ff0000")
+
+    app.mainloop()
     while(1):
         state = syncState(state, monitors)
         sendStateToControler(state, ser)
